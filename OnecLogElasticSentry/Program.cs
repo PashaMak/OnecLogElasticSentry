@@ -15,7 +15,7 @@ namespace OnecLogElasticSentry
         static void Main()
         {
         #if DEBUG
-            new Test();
+            Elastic.Run();
         #else
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]

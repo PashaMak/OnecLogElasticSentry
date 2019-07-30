@@ -17,134 +17,10 @@ namespace OnecLogElasticSentry
     {
         //https://www.elastic.co/guide/en/elasticsearch/client/net-api/7.x/elasticsearch-net-getting-started.html
 
-        private int connection { get; set; }
-
-        public void Test()
+        public async static void Run()
         {
+            //await Task.Run(() => new Elastic().FromFileToElastic());
             new Elastic().FromFileToElastic();
-        }
-
-        public void FromElasticToElastic()
-        {
-            Settings settings_file;
-            // считаем настройки
-            DataContractJsonSerializer jsonFormatter = new DataContractJsonSerializer(typeof(Settings));
-            using (FileStream fsread = new FileStream("OnecLogElasticSentry.json", FileMode.OpenOrCreate))
-            {
-                settings_file = (Settings)jsonFormatter.ReadObject(fsread);
-            }
-
-            var settings = new ConnectionSettings(new Uri("http://localhost:9200"));
-            settings.DefaultIndex("indexlogjr");
-
-            var client = new ElasticClient(settings);
-
-            var countsearchResponseDict = client.Search<IndexDictionary>(s => s.Index("v8dictlog").TotalHitsAsInteger());
-            var searchResponseDict = client.Search<IndexDictionary>(s => s
-               .Size((int)countsearchResponseDict.Total)
-               .Index("v8dictlog")
-            );
-
-            // получим последнюю дату обработанных событий
-            string last_timestamp = settings_file.timestamp;
-            
-            // получили порцию данных из основного индекса
-            var countsearchResponseLog = client.Search<IndexInputLog>(
-                s => s
-                .Index("v8log*")
-                .Query(q => q
-                .DateRange(r => r
-                    .Field(f => f.timestamp)
-                    .GreaterThan(last_timestamp)
-                    )
-                    )
-                .TotalHitsAsInteger());
-            int countrecord = (int)countsearchResponseLog.Total;
-            int i = 0;
-            int id = 0;
-            while (i < countrecord)
-            {
-                var searchResponseLog = client.Search<IndexInputLog>(s => s
-                .From(i)
-                .Size(1000)
-                .Index("v8log*")
-                .Query(q => q
-                    .DateRange(r => r
-                    .Field(f => f.timestamp)
-                    .GreaterThan(last_timestamp)
-                    )
-                )
-                );
-
-                i = i + 1000;
-
-                // обработаем новые записи
-                foreach (var elementLog in searchResponseLog.Documents)
-                {
-                    if (elementLog.metadata_id == 0)
-                        continue;
-
-                    // по словарю дополним данные
-                    foreach (var elementDict in searchResponseDict.Documents)
-                    {
-                        //1 – пользователи;
-                        //2 – компьютеры;
-                        //3 – приложения;
-                        //4 – события;
-                        //5 – метаданные;
-                        //6 – серверы;
-                        //7 – основные порты;
-                        //8 – вспомогательные порты.
-
-                        if (elementDict.Id == elementLog.user_id && elementDict.type == 1)
-                            elementLog.user_string = elementDict.value;
-
-                        if (elementDict.Id == elementLog.computer_id && elementDict.type == 2)
-                            elementLog.computer_string = elementDict.value;
-
-                        if (elementDict.Id == elementLog.application_id && elementDict.type == 3)
-                            elementLog.application_string = elementDict.value;
-
-                        if (elementDict.Id == elementLog.event_id && elementDict.type == 4)
-                            elementLog.event_string = elementDict.value;
-
-                        if (elementDict.Id == elementLog.metadata_id && elementDict.type == 5)
-                            elementLog.metadata_string = elementDict.value;
-
-                        //Транзакция в формате записи из двух элементов преобразованных в шестнадцатеричное число – 
-                        // первый – число секунд с 01.01.0001 00:00:00 умноженное на 10000, 
-                        // второй – номер транзакции;
-                        //var aaa = int.Parse(elementLog.t1);
-
-                    }
-
-                    IndexOutputLog output = new IndexOutputLog();
-                    output.Id = id;
-                    output.Application = elementLog.application_string;
-                    output.Timestamp = elementLog.timestampDateTime;
-                    output.Event = elementLog.event_string;
-                    output.Metadata = elementLog.metadata_string;
-                    output.Computer = elementLog.computer_string;
-                    output.Transaction = elementLog.transaction_status_string;
-                    output.Level = elementLog.level_string;
-                    output.User = elementLog.user_string;
-                    output.Presentation = elementLog.event_data_repr;
-                    id++;
-
-                    // отправим
-                    var asyncIndexResponse = client.IndexDocument(output);
-
-                    last_timestamp = elementLog.timestamp;
-                };
-            };
-
-            // запишем настройки
-            using (FileStream fswrite = new FileStream("OnecLogElasticSentry.json", FileMode.Open))
-            {
-                settings_file.date_time = DateTime.Now;
-                settings_file.timestamp = last_timestamp;
-                jsonFormatter.WriteObject(fswrite, settings_file);
-            }
         }
 
         private DateTime convertStringToDateTime(string timestamp)
@@ -160,6 +36,7 @@ namespace OnecLogElasticSentry
 
             return date;
         }
+
         private DateTime getDateFromTimestamp1C(string timestamp1C)
         {
             long datetimestamp = Convert.ToInt64(timestamp1C, 16) / 10000;
@@ -499,13 +376,22 @@ namespace OnecLogElasticSentry
                     {
                         // Доработать парсер чтобы разбила строки
                         // {20190730122419,U,{243595222e430,13eced},1,1,2,2,8,I,"",75,{"R",84:baa7005056997d3311e79f43761850ad},"10009020/210917/0017116/19, БЕЛЬГИЯ ",1,1,0,1,0,{0}},
-                        string error = e.Message;
+                        string error = e.Message + " record log:" + lineLog;
                     }
 
                     countLeft = 0;
                     countRight = 0;
                     lineLog = "";
                 }
+            }
+        }
+
+        private void AddRecordLog(string message)
+        {
+            using (FileStream fs = new FileStream("OnecLogElasticSentry.log", FileMode.OpenOrCreate))
+            using (StreamWriter swriter = new StreamWriter(fs))
+            {
+                swriter.WriteLine(message);
             }
         }
 
@@ -528,7 +414,7 @@ namespace OnecLogElasticSentry
             if (!Directory.Exists(settings_file.path_journal))
             {
                string message = "Не найден каталог " + settings_file.path_journal;
-                return;
+               return;
             }
 
             // прочитаем каталог баз
@@ -591,6 +477,7 @@ namespace OnecLogElasticSentry
                             } catch (Exception e)
                             {
                                 string error = e.Message;
+                                AddRecordLog(error);
                             }
                         }
                     }

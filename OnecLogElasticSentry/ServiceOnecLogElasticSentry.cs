@@ -22,7 +22,7 @@ namespace OnecLogElasticSentry
 
         protected override void OnStart(string[] args)
         {
-            new Test();
+            Elastic.Run();
         }
 
         protected override void OnStop()
