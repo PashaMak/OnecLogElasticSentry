@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnecLogElasticSentry", "OnecLogElasticSentry\OnecLogElasticSentry.csproj", "{CFEAC55D-AC8C-41D7-B792-040C769ED532}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnecLogElastic", "OnecLogElastic\OnecLogElastic.csproj", "{CFEAC55D-AC8C-41D7-B792-040C769ED532}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestneOnecLogElastic", "UnitTestneOnecLogElastic\UnitTestneOnecLogElastic.csproj", "{251D8498-D844-4EAF-86F5-54E43CB2A720}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CFEAC55D-AC8C-41D7-B792-040C769ED532}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFEAC55D-AC8C-41D7-B792-040C769ED532}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFEAC55D-AC8C-41D7-B792-040C769ED532}.Release|Any CPU.Build.0 = Release|Any CPU
+		{251D8498-D844-4EAF-86F5-54E43CB2A720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{251D8498-D844-4EAF-86F5-54E43CB2A720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{251D8498-D844-4EAF-86F5-54E43CB2A720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{251D8498-D844-4EAF-86F5-54E43CB2A720}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace OnecLogElasticSentry
+namespace OnecLogElastic
 {
     static class Program
     {
@@ -14,16 +15,18 @@ namespace OnecLogElasticSentry
         /// </summary>
         static void Main()
         {
-        #if DEBUG
-            Elastic.Run();
-        #else
+#if DEBUG
+            Elastic elastic = new Elastic();
+            Thread myThread = new Thread(new ThreadStart(elastic.RunTheard));
+            myThread.Start();
+#else
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
-                new ServiceOnecLogElasticSentry()
+                new ServiceOnecLogElastic()
             };
             ServiceBase.Run(ServicesToRun);
-        #endif
+#endif
         }
     }
 }

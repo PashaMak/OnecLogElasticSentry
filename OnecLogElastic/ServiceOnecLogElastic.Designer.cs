@@ -1,6 +1,6 @@
-﻿namespace OnecLogElasticSentry
+﻿namespace OnecLogElastic
 {
-    partial class ServiceOnecLogElasticSentry
+    partial class ServiceOnecLogElastic
     {
         /// <summary> 
         /// Обязательная переменная конструктора.
@@ -31,7 +31,7 @@
             // 
             // ServiceOnecLogElasticSentry
             // 
-            this.ServiceName = "OnecLogElasticSentry";
+            this.ServiceName = "OnecLogElastic";
 
         }
 
